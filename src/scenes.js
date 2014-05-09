@@ -239,7 +239,7 @@ this.unbind('KeyDown', this.restart_game);
 
 Crafty.scene('Loading', function(){
 
-  Crafty.load(['assets/Stein_oK_72ppi.png', 'assets/ladder.png', 'assets/Schatz_24x19_72ppi.png', 'assets/pole.png', 'assets/playersprite.png', 'assets/enemysprite.png', 'assets/background3.png' ], function(){
+        Crafty.load(['assets/Stein_oK_72ppi.png', 'assets/ladder.png', 'assets/Schatz_24x19_72ppi.png', 'assets/pole.png', 'assets/playersprite.png', 'assets/enemysprite.png', 'assets/background3.png' ], function(){
 
 	    Crafty.sprite(24, 'assets/playersprite.png', {
         spr_player: [0, 0],

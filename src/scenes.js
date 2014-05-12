@@ -255,7 +255,7 @@ Crafty.scene('Loading', function(){
             
         var bg = Crafty.e("2D, DOM, Image")
                     .attr({w: Crafty.viewport.width, h: Crafty.viewport.height})
-                    .image("assets/background3.png", no-repeat);
+                    .image("assets/background3.png", "no-repeat");
 
       Crafty.e('2D, DOM, Text')
     .text("Press Key To Start!")

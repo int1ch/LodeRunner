@@ -31,7 +31,7 @@ function AI2D ( c ){
         //make desicion
         var x = c.x / c.w;
         var y = c.y / c.h;
-        console.log( 'desicion: for AI at:', x, y );
+        //console.log( 'desicion: for AI at:', x, y );
 
         //route reset!
         var routes = [
@@ -70,12 +70,13 @@ function AI2D ( c ){
                 for( var j in pv ){
                     //test map
                     if( was_here( pv[j] ) ){ continue; }
-                    if( pX === pv[j][0] && pY === pv[j][1] ){
-                        return [ route[1][0] - x, route[1][1] - y ]; 
-                    }
 
                     var new_route = clone( route );
                     new_route.push( pv[j] );
+                    if( pX === pv[j][0] && pY === pv[j][1] ){
+                        return [ new_route[1][0] - x, new_route[1][1] - y ]; 
+                    }
+
                     new_routes.push( new_route );
                 }
             }
@@ -87,11 +88,11 @@ function AI2D ( c ){
             var p = routes[ i ][ routes[ i ].length -1  ];
             var d = distance( p );
 
-            console.log('check distance of: ', p, d);
+            //console.log('check distance of: ', p, d);
             if( (min_d === undefined) || (d < min_d) ){ min_i = i; min_d = d }; 
         }
 
-        console.log("minimal distance: ", d , "for route: ", i);
+        //console.log("minimal distance: ", d , "for route: ", i);
 
         return [ routes[min_i][1][0] - x, routes[min_i][1][1] - y ]; 
 
@@ -100,29 +101,37 @@ function AI2D ( c ){
         return null;
     }
 }
- function ki(moveDirection, x, y, h, w, plX, plY)
-        {
+function ki(moveDirection, x, y, h, w, plX, plY) {
           if (moveDirection == 4 && 
                 (
-                    //( detectNextBlock_CurrentLeftUp() == '.' &&  detectNextBlock_CurrentRightUp() == '-') || 
-                    (detectNextBlock_CurrentLeftUp(x,y,h,w) == '.' && detectNextBlock_CurrentRightUp(x,y,h,w) == 'H')
+                    (detectNextBlock_CurrentLeftUp(x,y,h,w) == '-' || detectNextBlock_CurrentRightUp(x,y,h,w) == '-') || 
+                    (detectNextBlock_CurrentLeftUp(x,y,h,w) == 'H' ||detectNextBlock_CurrentRightUp(x,y,h,w) == 'H')
                 ) &&
                 (
-                    (detectNextBlock_DownLeft(x,y,h,w) == '.' || detectNextBlock_DownRight(x,y,h,w) == '.' )
-                    
-                )
-            ) 
-        ){
-
-            moveDirection = 1;
-
-        } 
-        else if (moveDirection == 3 && 
-            (
+                    (detectNextBlock_CurrentLeftDown(x,y,h,w) == '.' || detectNextBlock_CurrentRightDown(x,y,h,w) == '.') || 
+                    (detectNextBlock_CurrentLeftDown(x,y,h,w) == '-' || detectNextBlock_CurrentRightDown(x,y,h,w) == '-')
+                ) 
+             )
+          {
+              moveDirection = 4;
+              
+          }
+          else if (moveDirection == 1 && 
                 (
-                    //( detectNextBlock_CurrentLeftUp() == '-' &&  detectNextBlock_CurrentRightUp() == '.') || 
-                    (detectNextBlock_CurrentLeftUp(x,y,h,w) == 'H' && detectNextBlock_CurrentRightUp(x,y,h,w) == '.')
-                ) &&
+                    (
+                        //( detectNextBlock_CurrentLeftUp() == '.' &&  detectNextBlock_CurrentRightUp() == '-') || 
+                        (detectNextBlock_CurrentLeftUp(x,y,h,w) == '.' && detectNextBlock_CurrentRightUp(x,y,h,w) == 'H')
+                    ) &&
+                    (
+                        (detectNextBlock_DownLeft(x,y,h,w) == '.' || detectNextBlock_DownRight(x,y,h,w) == '.' )
+                        
+                    )
+                ) 
+             )
+          {
+              moveDirection = 1;
+          }
+          else if (moveDirection == 3 && 
                 (
                     (
                         //( detectNextBlock_CurrentLeftUp() == '-' &&  detectNextBlock_CurrentRightUp() == '.') || 
@@ -137,7 +146,6 @@ function AI2D ( c ){
           {
               moveDirection = 3;
           }
-          
           else //wirklicher Ki Teil
           {
               if (plY < y && ((detectNextBlock_CurrentRightUp(x,y,h,w) == 'H' || detectNextBlock_CurrentLeftUp(x,y,h,w) == 'H') ||

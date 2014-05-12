@@ -189,8 +189,10 @@ Crafty.c('Enemy',
         },
        
         killPlayer: function(data) {
-            playerCharacter = data[0].obj;
-            playerCharacter.collect();
+
+            Crafty.trigger('EnemyCollison', this);
+            //playerCharacter = data[0].obj;
+            //playerCharacter.collect();
         },
         killPlayerWithCoord: function ()
         { 

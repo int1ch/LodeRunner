@@ -115,30 +115,39 @@ var playerW = 0;
 var playerH = 0;
 
  
- Crafty.c('Enemy', {
-    init: function() {
-        this.requires('Actor, Collision, Gravity, spr_enemy, SpriteAnimation')
-                //.stopOnSolids()
-                .bind('EnterFrame', this.toDoList)
-                .animate("walk_right", 5, 0, 9)
-                .animate("walk_up", 0, 1, 2)
-                .animate("walk_down", 2, 1, 0)
-                .animate("climb_right", 0, 2, 3) 
-                .animate("climb_left", 4, 2, 7) 
-                .onHit('PlayerCharacater', this.killPlayer);
-                //.onHit('Treasure', this.collectTreasure);
-    },
-
-
-    
-
+Crafty.c('Enemy', 
+    {
+        //x - xpixel (absolute)
+        //y - ypixel (pos)
+        //w - width
+        //h - height
+        init: function() {
+            this.requires('Actor, Collision, Gravity, spr_enemy, SpriteAnimation')
+                    //.stopOnSolids()
+                    .bind('EnterFrame', this.toDoList)
+                    .animate("walk_right", 5, 0, 9)
+                    .animate("walk_up", 0, 1, 2)
+                    .animate("walk_down", 2, 1, 0)
+                    .animate("climb_right", 0, 2, 3) 
+                    .animate("climb_left", 4, 2, 7) 
+                    .onHit('PlayerCharacater', this.killPlayer);
+                    //.onHit('Treasure', this.collectTreasure);
+        },
+        //Frage: kann irgendwie playerX und Y nicht lesen (sind aber global und beim spieler funktionierts(siehe console)
+        //Wenn man eine move Direction vorher festlegt hängt er sich bei detect Block auf!
         moveDirection : 0,
         playerSpeed : 1.5,
+        move: {x:0, y:0},
         toDoList: function(){
+
+            moveAI2D( this );
+            move( this );
             //this.x += 10;
-          this.moveDirection = ki(this.moveDirection, this.x, this.y, this.h, this.w, playerX, playerY);        
-          this.killPlayerWithCoord();
-          this.applyXandY();
+            /*
+            this.moveDirection = ki(this.moveDirection, this.x, this.y, this.h, this.w, playerX, playerY);        
+            this.killPlayerWithCoord();
+            this.applyXandY();
+            */
         },
 
         applyXandY: function(){
@@ -180,65 +189,122 @@ var playerH = 0;
         },
        
         killPlayer: function(data) {
-	playerCharacter = data[0].obj;
-		playerCharacter.collect();
-	},
+            playerCharacter = data[0].obj;
+            playerCharacter.collect();
+        },
         killPlayerWithCoord: function ()
         { 
             if(playerX >= this.x && playerY == this.y && playerX <= (this.x + this.w))
             {	
 				Crafty.trigger('EnemyCollison', this);
-          
             }
-                       
+        },
+        mapPos: function (){
+            return {
+                x: Math.round( this.x / this.w ),
+                y: Math.round( this.y / this.h ),
+            }
         }
+        
  });
  
 
 
 var levelReady = 0;
+var pX = null, pY = null;
 //var level = Scene.level1;
 
 
 
 // This is the player-controlled character
 Crafty.c('PlayerCharacter', {
-    
-   
-    
     init: function() {
-        this.requires('Actor, Multiway, Collision, Gravity, spr_player, SpriteAnimation, Keyboard')// Multiway: Character goes in the direction of the degree number. Right Arrow = 0 (Clockwise). Number in the Beginnig is the speed.           
-                .bind('KeyDown', this.keyTester)
-                .bind('KeyUp', this.keyTester)
-                .bind('EnterFrame', this.toDoList)
-                .animate("walk_left", 0, 0, 4)
-                .animate("walk_right", 5, 0, 9)
-                .animate("walk_up", 0, 1, 2)
-                .animate("walk_down", 2, 1, 0)
-                .animate("climb_right", 0, 2, 3) 
-                .animate("climb_left", 4, 2, 7) 
-                .onHit('Treasure', this.collectTreasure)
-                .onHit('Exit', this.hitExit);
+        // Multiway: Character goes in the direction of the degree number. Right Arrow = 0 (Clockwise). Number in the Beginnig is the speed.           
+        this.requires('Actor, Multiway, Collision, Gravity, spr_player, SpriteAnimation, Keyboard')
+            .bind('KeyDown'     , this.keyTester)
+            .bind('KeyUp'       , this.keyTester)
+            .bind('EnterFrame'  , this.toDoList)     //enter frame called on each time tic;
+            .animate("walk_left", 0, 0, 4)
+            .animate("walk_right", 5, 0, 9)
+            .animate("walk_up", 0, 1, 2)
+            .animate("walk_down", 2, 1, 0)
+            .animate("climb_right", 0, 2, 3) 
+            .animate("climb_left", 4, 2, 7) 
+            .onHit('Treasure'   , this.collectTreasure)
+            .onHit('Exit'       , this.hitExit);
 				
 		var animation_speed = 5;
         this.bind('NewDirection', function(data) {
-        if (data.x > 0) {
-			this.animate('walk_right', animation_speed, -1);
-        } else if (data.x < 0) {
-			this.animate('walk_left', animation_speed, -1);
-        } else if (data.y > 0) {
-			this.animate('walk_down', animation_speed, -1);
-        } else if (data.y < 0) {
-			this.animate('walk_up', animation_speed, -1);
-        } else {
-			this.stop();
-        }
+            if (data.x > 0) {
+                this.animate('walk_right', animation_speed, -1);
+            } else if (data.x < 0) {
+                this.animate('walk_left', animation_speed, -1);
+            } else if (data.y > 0) {
+                this.animate('walk_down', animation_speed, -1);
+            } else if (data.y < 0) {
+                this.animate('walk_up', animation_speed, -1);
+            } else {
+                this.stop();
+            }
         }); 
-                
+        this.move = {x : 0, y : 0 };
+
+        pX = Math.round( this.x / this.w );
+        pY = Math.round( this.y / this.h );
     },
-	
-        keyTester: function ()
-        {
+
+    /*
+      Move Left(1) or Right(3) possible,
+       * when map-wall not hitted
+       * player above BLOCK, above LEDER, on POLE
+       * player have place to move(next grid), EMPTY, POLE, LEDDER 
+       *
+      Move UP(2) is possible
+       * where player on LEDDER
+       * where next is LEDDER, empty pole 
+      Move DOWN(4) is possible, when stand on POLE, LEDDER
+          or dot
+    */
+    move     : null,
+    requireStop: 0,
+
+    keyTester: function(){
+        //function triggers on KeyUpOr KeyDown
+        //so i need to save STATE
+
+        /* Move:
+         * . 2
+         * 1 0 3
+         * . 4
+         * */
+
+        
+        this.requireStop = 0;
+        if(this.isDown('LEFT_ARROW') ){
+            this.move= {x: -1, y: 0};
+        } else if(this.isDown('RIGHT_ARROW') ){
+            this.move= {x: +1, y: 0};
+        } else if(this.isDown('UP_ARROW')  ){
+            this.move= {x:  0, y: -1 };
+        } else if(this.isDown('DOWN_ARROW') ){
+            this.move= {x:  0, y: 1 };
+        } else {
+            this.requireStop = 1;
+            this.move= {x:0, y: 0};
+          //  this.stop();
+        }
+        //console.log({ move : this.move, rs: this.requireStop, stand: can_stand( this ), clibm: can_climb( this ), })
+ 
+    },
+    keyTesterOld: function (){ 
+
+        //move only if key pressed
+        //pressed key set move-direction
+        //while it's possible to move-on we move on
+        //key up is means stop
+
+         console.log('standing:' , can_stand( this ) );
+         console.log('climbing:' , can_climb( this ) );
           if (this.moveDirection == 4 && 
                 (
                     (detectNextBlock_CurrentLeftUp(this.x, this.y, this.h, this.w) == '-' || detectNextBlock_CurrentRightUp(this.x, this.y, this.h, this.w) == '-') || 
@@ -281,9 +347,9 @@ Crafty.c('PlayerCharacter', {
              )
           {
               this.moveDirection = 3;
-          }
-          else
-          {
+        }
+        else
+        {
             this.moveDirection = 0;
             if(this.isDown('LEFT_ARROW') || this.isDown('A'))
             {
@@ -356,37 +422,47 @@ Crafty.c('PlayerCharacter', {
         toDoList: function(){
           //this.moveDirection = keyTester(this.x, this.y, this.w ,this.h, this.moveDirection);
           //movePlayer(this.x, this.y, this.w, this.h, this.moveDirection, this.playerSpeed); 
-          this.applyXandY();
+            move( this );
+            playerX = this.x;
+            playerY = this.y;
+            pX = Math.round( this.x / this.w );
+            pY = Math.round( this.y / this.h );
+          //this.applyXandY();
         },
         
         applyXandY: function(){
-            var xAndY = movePlayer(this.x, this.y, this.h, this.w, this.moveDirection, this.playerSpeed);
+            var xAndY = movePlayer(this.x, this.y, this.h, this.w, this.move, this.playerSpeed);
             this.x = xAndY[0];
             this.y = xAndY[1];
             playerX = this.x;
             playerY = this.y; 
             playerW = this.w;
             playerH = this.h;
+            //console.log("Player x/y " + playerX + "/" +playerY);
         },
         
-	 // Respond to this player collecting a Treasure
-	collectTreasure: function(data) {
-	treasure = data[0].obj;
-		treasure.collect();
-	},
+        // Respond to this player collecting a Treasure
+        collectTreasure: function(data) {
+            treasure = data[0].obj;
+            treasure.collect();
+        },
         
-         // Respond to this player hitting the exit
-	hitExit: function(data) {
+        // Respond to this player hitting the exit
+        hitExit: function(data) {
             exit = data[0].obj;
-		exit.collect();
-	},
-        
-	collect: function() {
-	this.destroy();
-	Crafty.trigger('PlayerKilled', this);
-    }
-	
-        
+            exit.collect();
+        },
+        collect: function() {
+            this.destroy();
+            Crafty.trigger('PlayerKilled', this);
+        },
+        mapPos: function (){
+            return {
+                x: Math.round( this.x / this.w ),
+                y: Math.round( this.y / this.h ),
+            }
+        }
+
 });
 
 var treasureCollected = 0;
@@ -394,25 +470,24 @@ var treasureCollected = 0;
 Crafty.c('Treasure', {
     init: function() {
         this.requires('Actor, spr_treasure')
-                .sprite(0,0);
+            .sprite(0,0);
     },
 	
-	collect: function() {
-        
+        collect: function() {
         treasureCollected += 1;
-	this.destroy();
-	Crafty.trigger('TreasureCollected', this);
+        this.destroy();
+        Crafty.trigger('TreasureCollected', this);
     }
 });
 
 Crafty.c('Exit', {
     init: function() {
         this.requires('Actor, Image')
-                .image('assets/Ladder.png');
+            .image('assets/ladder.png');
     },
 	
     collect: function() {
-	Crafty.trigger('EndLevel', this);
+        Crafty.trigger('EndLevel', this);
     }
 });
 

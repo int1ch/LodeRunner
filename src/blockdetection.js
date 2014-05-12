@@ -21,6 +21,43 @@ var b_climb = {
     'H' : 1,
 };
 
+function directionVision( x, y ){
+    x --;
+    y --;
+    var v = {u:0, d:0, l:0, r:0 }
+    if(     b_climb[ map[ y ][ x ] ] 
+        && !b_block[ map[y-1][ x ] ]
+    ){
+        //has stair and hasn block above
+        v.u = 1;
+    }
+    if( b_stand[ map[ y+1 ][ x ] ] || b_grab[ map[ y ][ x ] ]){
+        v.l = 1;
+        v.r = 1;
+        if( x === 0 ){                      v.l = 0 };
+        if( map[y][x+1] === undefined ){    v.r = 0 };
+        if( b_block[ map[ y ][x + 1 ] ]){   v.r = 0 };
+        if( b_block[ map[ y ][x - 1 ] ]){   v.l = 0 };
+    } else {
+        //can fall or falling
+        v.d = 1;
+    }
+    if( b_climb[ map[ y +1 ][ x ]] ){
+        //down stairs
+        v.d = 1;
+    }
+    return v;
+}
+function posVision( p ){
+    var v = directionVision( p[0] , p[1] );
+    
+    var ps = [];
+    if(v.u){ ps.push( [ p[0] , p[1]-1 ] )} 
+    if(v.d){ ps.push( [ p[0] , p[1]+1 ] )} 
+    if(v.l){ ps.push( [ p[0]-1 , p[1] ] )} 
+    if(v.r){ ps.push( [ p[0]+1 , p[1] ] )} 
+    return ps;
+}
 
 function get_baseline_cells(c){
     return [

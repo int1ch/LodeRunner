@@ -15,7 +15,8 @@
  *   player move from cell to cell, can dig on side cells (phisics is simplified)
  *
  * */
-
+{
+'use strict';
 function moveAI2D( c ){
     var move = AI2D(c);
     if( move ){
@@ -100,6 +101,8 @@ function AI2D ( c ){
         //move in requested direction
         return null;
     }
+}
+
 }
 function ki(moveDirection, x, y, h, w, plX, plY) {
           if (moveDirection == 4 && 

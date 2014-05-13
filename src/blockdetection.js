@@ -20,6 +20,8 @@ var b_climb = {
     'H' : 1,
 };
 
+{
+'use strict';
 // return posible movements  from x,y coordinates (used for AI2D) 
 function directionVision( x, y ){
     x --;
@@ -231,6 +233,7 @@ function can_stand( c ){
         }
     }
     return 0
+}
 }
 
 //Detects the upcoming block in -x direction 

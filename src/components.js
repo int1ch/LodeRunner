@@ -130,14 +130,15 @@ Crafty.c('Enemy',
                     .animate("walk_down", 2, 1, 0)
                     .animate("climb_right", 0, 2, 3) 
                     .animate("climb_left", 4, 2, 7) 
-                    .onHit('PlayerCharacater', this.killPlayer);
+                    .onHit('PlayerCharacter', this.killPlayer);
                     //.onHit('Treasure', this.collectTreasure);
+            this.move = {x:0,y:0};
         },
         //Frage: kann irgendwie playerX und Y nicht lesen (sind aber global und beim spieler funktionierts(siehe console)
         //Wenn man eine move Direction vorher festlegt hängt er sich bei detect Block auf!
         moveDirection : 0,
-        playerSpeed : 1.5,
-        move: {x:0, y:0},
+        playerSpeed     : 1.5,
+        move            : null,
         toDoList: function(){
 
             moveAI2D( this );
@@ -239,7 +240,7 @@ Crafty.c('PlayerCharacter', {
         this.bind('NewDirection', function(data) {
             if (data.x > 0) {
                 this.animate('walk_right', animation_speed, -1);
-            } else if (data.x < 0) {
+        } else if (data.x < 0) {
                 this.animate('walk_left', animation_speed, -1);
             } else if (data.y > 0) {
                 this.animate('walk_down', animation_speed, -1);
@@ -282,13 +283,13 @@ Crafty.c('PlayerCharacter', {
 
         
         this.requireStop = 0;
-        if(this.isDown('LEFT_ARROW') ){
+        if(         this.isDown('LEFT_ARROW')   || this.isDown('A') ){
             this.move= {x: -1, y: 0};
-        } else if(this.isDown('RIGHT_ARROW') ){
+        } else if(  this.isDown('RIGHT_ARROW')  || this.isDown('D') ){
             this.move= {x: +1, y: 0};
-        } else if(this.isDown('UP_ARROW')  ){
+        } else if(  this.isDown('UP_ARROW')     || this.isDown('W') ){
             this.move= {x:  0, y: -1 };
-        } else if(this.isDown('DOWN_ARROW') ){
+        } else if(  this.isDown('DOWN_ARROW')   || this.isDown('S') ){
             this.move= {x:  0, y: 1 };
         } else {
             this.requireStop = 1;
@@ -475,7 +476,7 @@ Crafty.c('Treasure', {
             .sprite(0,0);
     },
 	
-        collect: function() {
+    collect: function() {
         treasureCollected += 1;
         this.destroy();
         Crafty.trigger('TreasureCollected', this);

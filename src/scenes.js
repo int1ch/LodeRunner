@@ -27,6 +27,17 @@ var level1 =[
     ''
     ];*/
 
+/*
+   Legend:
+    W - destroeble brick(can stand on)
+    C - solid brick
+    H - ledder  (can move up, can stand on)
+    h - hidden l
+    -   pole, can "stand" on, can drop off
+    E - enemy
+    T - treasure
+ */
+
 var level1 =[                     	
     '.........................X......',
     '.E..T....................h......',
@@ -135,75 +146,68 @@ Crafty.scene('Game', function() {
 	
     for (var y = 0; y < Game.map_grid.height; y++) {
         map_comp[y] = new Array();
-        for (var x = 0; x < Game.map_grid.width; x++) {    
+        for (var x = 0; x < Game.map_grid.width; x++) {
 
-                if (x == 0 || x == Game.map_grid.width - 1 || y == 0 || y == Game.map_grid.height - 1) {																					
-                    map_comp[y][x] = Crafty.e('Frame').at(x, y);										
-                }			
-                if (map[y][x] == 'W'){
-                    map_comp[y][x] = Crafty.e('Stone').at(x+1, y+1);
-                    //console.log("Entity: " + map_comp[y][x].toString());
-                }
-                if (map[y][x] == 'C'){
-                    map_comp[y][x] = Crafty.e('Concrete').at(x+1, y+1);					
-                }				
-                if (map[y][x] == 'H'){
-                    map_comp[y][x] = Crafty.e('Ladder').at(x+1, y+1);
-                }
-                if (map[y][x] == '-'){
-                    map_comp[y][x] = Crafty.e('Pole').at(x+1, y+1);
-                }                                 		                
-                if (map[y][x] == 'T'){
-                    map_comp[y][x] = Crafty.e('Treasure').at(x+1, y+1);
-					container.add();					
-                }
-                if (map[y][x] == 'P'){
-                thePlayer  =  Crafty.e('PlayerCharacter').at(x+1, y+1);  
-                }				
-                if (map[y][x] == 'E'){
-                    Crafty.e('Enemy').at(x+1, y+1);
-                }
-        } 
-    }        
-   
-    
-    this.show_ladder = this.bind('TreasureCollected', function() {   
-        container.collectTreasure();
-        if(container.checkTreasures() == true){
-            
-            for (var y = 0; y < 10; y++) {
-		
-                for (var x = 0; x < Game.map_grid.width; x++) {    
-																		           						
-                    if (map[y][x] == 'h'){
-                        Crafty.e('Ladder').at(x+1, y+1);
+            if (x == 0 || x == Game.map_grid.width - 1 || y == 0 || y == Game.map_grid.height - 1) {
+                map_comp[y][x] = Crafty.e('Frame').at(x, y);
+            }
+            if (map[y][x] == 'W'){
+                map_comp[y][x] = Crafty.e('Stone').at(x+1, y+1);
+                //console.log("Entity: " + map_comp[y][x].toString());
+            }
+            if (map[y][x] == 'C'){
+                map_comp[y][x] = Crafty.e('Concrete').at(x+1, y+1);
+            }
+            if (map[y][x] == 'H'){
+                map_comp[y][x] = Crafty.e('Ladder').at(x+1, y+1);
+            }
+            if (map[y][x] == '-'){
+                map_comp[y][x] = Crafty.e('Pole').at(x+1, y+1);
+            }
+            if (map[y][x] == 'T'){
+                map_comp[y][x] = Crafty.e('Treasure').at(x+1, y+1);
+                container.add();
+            }
+            if (map[y][x] == 'P'){
+            thePlayer  =  Crafty.e('PlayerCharacter').at(x+1, y+1);
+            }
+            if (map[y][x] == 'E'){
+                Crafty.e('Enemy').at(x+1, y+1);
+            }
+        }
+    }
+        this.show_ladder = this.bind('TreasureCollected', function() {
+            container.collectTreasure();
+            if(container.checkTreasures() == true){
+                for (var y = 0; y < 10; y++) {
+                    for (var x = 0; x < Game.map_grid.width; x++) {
+                        if (map[y][x] == 'h'){
+                            Crafty.e('Ladder').at(x+1, y+1);
+                        }
+                        if (map[y][x] == 'X'){
+                            Crafty.e('Exit').at(x+1, y+1);
+                        }
                     }
-                    if (map[y][x] == 'X'){
-                        Crafty.e('Exit').at(x+1, y+1);                           					
-                    }
-                    
-                } 
-            }                  
-        }             
-});
-this.end_postion = this.bind('EndLevel', function() { 
-	   Crafty("2D").destroy();
-	console.log(levelcounter++);
-	   Crafty.scene('NextLevel');         
-});
-this.game_over = this.bind('EnemyCollison', function() { 
-   
-	   Crafty("2D").destroy();
-	   
-	   Crafty.scene('Gameover');          
-});
-}, function() {
-  this.unbind('TreasureCollected', this.show_ladder); //ausm tut
-},function() {
-  this.unbind('EnemyCollison', this.game_over); //ausm tut
-}, function(){
-   this.unbind('GameWon', this.end_postion);
-});
+                    map[y] = map[y].replace('h', 'H');
+                }
+            }
+        });
+        this.end_postion = this.bind('EndLevel', function() {
+            Crafty("2D").destroy();
+            console.log(levelcounter++);
+            Crafty.scene('NextLevel');
+        });
+        this.game_over = this.bind('EnemyCollison', function() {
+            Crafty("2D").destroy();
+            Crafty.scene('Gameover');
+        });
+    },
+    /* uninit */ function() {
+        this.unbind('TreasureCollected',    this.show_ladder); //ausm tut
+        this.unbind('EnemyCollison',        this.game_over); //ausm tut
+        this.unbind('GameWon',              this.end_postion);
+    }
+);
 
 Crafty.scene('NextLevel', function() {
     Crafty.e("2D, DOM, Text")
@@ -239,7 +243,7 @@ this.unbind('KeyDown', this.restart_game);
 
 Crafty.scene('Loading', function(){
 
-  Crafty.load(['assets/Stein_oK_72ppi.png', 'assets/ladder.png', 'assets/Schatz_24x19_72ppi.png', 'assets/pole.png', 'assets/playersprite.png', 'assets/enemysprite.png', 'assets/background3.png' ], function(){
+        Crafty.load(['assets/Stein_oK_72ppi.png', 'assets/ladder.png', 'assets/Schatz_24x19_72ppi.png', 'assets/pole.png', 'assets/playersprite.png', 'assets/enemysprite.png', 'assets/background3.png' ], function(){
 
 	    Crafty.sprite(24, 'assets/playersprite.png', {
         spr_player: [0, 0],
@@ -255,7 +259,7 @@ Crafty.scene('Loading', function(){
             
         var bg = Crafty.e("2D, DOM, Image")
                     .attr({w: Crafty.viewport.width, h: Crafty.viewport.height})
-                    .image("assets/background3.png", no-repeat);
+                    .image("assets/background3.png", "no-repeat");
 
       Crafty.e('2D, DOM, Text')
     .text("Press Key To Start!")

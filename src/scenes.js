@@ -130,21 +130,22 @@ Crafty.scene('Game', function() {
 	container = Crafty.e('TreasureContainer');
  
     if(levelcounter == 0){
-		map = level1;
+		map = Crafty.clone( level1 );
     }
     //console.log(levelcounter);
 	
     if(levelcounter == 1){
-		map = level2;
+		map = Crafty.clone( level2 );
     }
     
-    if(levelcounter == 3){
-		map = level3;
+    if(levelcounter >= 3){
+		map =Crafty.clone( level3 );
     }
     
 	container.initialize();
 	
     for (var y = 0; y < Game.map_grid.height; y++) {
+        map[y] = map[y].split("");
         map_comp[y] = new Array();
         for (var x = 0; x < Game.map_grid.width; x++) {
 
@@ -183,12 +184,12 @@ Crafty.scene('Game', function() {
                     for (var x = 0; x < Game.map_grid.width; x++) {
                         if (map[y][x] == 'h'){
                             Crafty.e('Ladder').at(x+1, y+1);
+                            map[y][x] = "H";
                         }
                         if (map[y][x] == 'X'){
                             Crafty.e('Exit').at(x+1, y+1);
                         }
                     }
-                    map[y] = map[y].replace('h', 'H');
                 }
             }
         });

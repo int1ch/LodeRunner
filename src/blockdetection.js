@@ -7,6 +7,7 @@ var b_stand = {
     'W' : 1,
     'H' : 1,
     'C' : 1,
+    '^' : 1,
 };
 var b_block = {
     'W' : 1,
@@ -19,6 +20,15 @@ var b_grab = {
 var b_climb = {
     'H' : 1,
 };
+
+var b_hole = {
+    '_' : 1,
+}
+
+/*
+ * _ - digged (acting hole)
+ * ^ - hole with enemy
+ */
 
 {
 'use strict';
@@ -39,7 +49,7 @@ function directionVision( x, y ){
     }
 
     //console.log( y + 1 );
-    if( b_stand[ map[ y+1 ][ x ] ] || b_grab[ map[ y ][ x ] ]){ //?
+    if( b_stand[ map[ y+1 ][ x ] ] || b_grab[ map[ y ][ x ] ] || b_hole[ map[ y+1 ][x] ]){ //?
         v.l = 1;
         v.r = 1;
         if( x === 0 ){                      v.l = 0 };
@@ -160,10 +170,9 @@ function can_move_y(c) {
     if(!can_stand(c)){
         return null;
     }
+
     var y   = c.move.y;
-    if(!y){
-        return null;
-    }
+    if(!y)      return null; 
 
     if( in_x(c) ){
         var pos = get_baseline_cells( c );
@@ -210,7 +219,7 @@ function can_stand( c ){
     var cells = get_baseline_cells( c )
     //console.log( c.x, c.y , cells );
 
-
+    if( c.lift ) return 1;
     for (var i=0; i< cells.length; i++) {
         var p = cells[i];
 
@@ -222,6 +231,9 @@ function can_stand( c ){
             }
             //current line
             if( b_grab[ map[ p.y-1 ][ p.x ] ] ){
+                return 1;
+            }
+            if(c.enemy && b_hole[ map[ p.y - 1  ][ p.x ] ]){
                 return 1;
             }
         }

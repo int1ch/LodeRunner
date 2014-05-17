@@ -13,7 +13,7 @@ Crafty.c('Grid', {
             return {x: this.x / Game.map_grid.tile.width, y: this.y / Game.map_grid.tile.height}
         } else {
             this.attr({x: x * Game.map_grid.tile.width, y: y * Game.map_grid.tile.height});
-            this.attr({xc: x, yc: y } );
+            this.attr({cx: x-1, cy: y-1 } );
             return this;
         }
     }
@@ -38,98 +38,46 @@ Crafty.c('Stone', {   //ohne spritemapping
     init: function() {
         this.requires('Actor, Solid, spr_stone')                
                 .bind('EnterFrame', this.onFrame )
+                //.onHit('Enemy', this.unDig )
                 .sprite(1,0);
         
     },
-    digState: 0,
+    holeSize: 0, //hole timer
+    holeSt  : 0, //0 no hole, 1 digging, 2 digged
+    digging: 0,
     speed: 3,
     onFrame: function(){
-        if(this.digState ){
-
-            this.digState -= this.speed;
-            console.log(this.digState );
-            this.checkState();
+        if(this.holeSt){
+            this.holeSize -= this.speed;
+            if( this.holeSize <= 0 ){
+                this.holeSize = 0;
+                this.holeSt   = 0;
+                this.sprite(1,0);
+                map[this.cy][this.cx] = 'W';
+                //kill every one one in touch collision
+            }
+            if( this.holeSt == 1 && this.holeSize >= this.h ){
+                this.holeSt = 2; //hole digged
+                this.sprite(0,1);
+                this.holeSize += this.w * 4 * this.speed ; //speed defined by 
+                map[this.cy][this.cx] = '_';
+            }
         }
     },
     digged: function(){
-        return this.digState >= this.w ? 1 : 0;
+        return this.holeSt >= this.w ? 1 : 0;
     },
-    dig: function(){
-        //Called by player
-        if( this.digged() ) return;
-
-        console.log('1DIG STATE:', this ,'xxx', this.digState, this.speed, this.w);
-        this.digState += this.speed * 2; //double speed for prevent redigging
-        console.log('2DIG STATE:', this.digState, this.speed, this.w);
-
-        this.checkState();
-
-        if( this.digState >= this.w  ){
-            this.digState += this.w * 10; //speed defined by 
-            return 1;
-        }
-        //console.log('diggin block', this);
-    },
-    enemyUnDig: function () {
-        if(this.digState && !this.digged ){
-            console.log('undiggin');
-            this.gitState =- this.speed * 2;
-            this.checkState();
+    dig: function( ){
+        if( !this.holeSt ) this.holeSt = 1;
+        if( this.holeSt == 1 ){
+            this.holeSize += this.speed * 2;
         }
     },
-    checkState: function () {
-        if( this.digState <= 0 ){
-            this.digState = 0;
-            this.sprite(1,0);
-            map[this.yc-1][this.xc-1] = 'W';
-        }
-        if( this.digState >= this.w ){
-            this.sprite(0,1);
-            map[this.yc-1][this.xc-1] = '_';
+    unDig: function ( data ) {
+        if(this.holeSt == 1 ){
+            this.holeSt = 3; //hole pevented from digging
         }
     },
-
-       //Frage         
-       /* digged[]: {0, 0},
-        
-        checkDigging: function(){
-            if (this.digged[0] == 1 && this.digged [1] >= 50)
-            {
-                this.sprite,(0,0);
-                this.digged[1] -= 1;
-            }
-            else if (this.digged[0] == 1 && this.digged [1] >= 1 )
-            {
-                this.sprite,(0,1);
-                this.digged[1] -= 1;
-            }
-            else(this.digged[0]  == 1)
-            {
-                digged[0] = 0;
-            }
-        }
-        */
-       
-       digged0: 0,
-               
-       digged1: 0,        
-       
-       checkDigging: function(){
-            if (this.digged0 == 1 && this.digged1 >= 50)
-            {
-                this.sprite(0,0);
-                this.digged1 -= 1;
-            }
-            else if (this.digged0 == 1 && this.digged1 >= 1 )
-            {
-                this.sprite(0,1);
-                this.digged1 -= 1;
-            }
-            else(this.digged0 == 1)
-            {
-                this.digged0 = 0;
-            }
-        },
 });
 	/*Crafty.c('Concrete', {    not in use yet
     init: function() {
@@ -168,50 +116,72 @@ Crafty.c('Enemy',
         init: function() {
             this.requires('Actor, Collision, Gravity, spr_enemy, SpriteAnimation')
                     //.stopOnSolids()
-                    .bind('EnterFrame', this.toDoList)
+                    .bind('EnterFrame', this.onFrame)
                     .animate("walk_right", 5, 0, 9)
                     .animate("walk_up", 0, 1, 2)
                     .animate("walk_down", 2, 1, 0)
                     .animate("climb_right", 0, 2, 3) 
                     .animate("climb_left", 4, 2, 7) 
-                    .onHit('PlayerCharacter', this.killPlayer)
-                    .onHit('Stone', this.reDigging)
+                    //.onHit('PlayerCharacter', this.killPlayer)
+                    //.onHit('Enemy', this.enemyCollision )
                     ;  
                     //.onHit('Treasure', this.collectTreasure);
             this.move = {x:0,y:0};
         },
         //Frage: kann irgendwie playerX und Y nicht lesen (sind aber global und beim spieler funktionierts(siehe console)
         //Wenn man eine move Direction vorher festlegt hängt er sich bei detect Block auf!
-        moveDirection : 0,
+        enemy           : 1,
+        moveDirection   : 0,
+        skipFrames      : 0,
+        lift            : 0,
+        cx              : 0,
+        cy              : 0,
         playerSpeed     : 1.5,
         move            : null,
-        toDoList: function(){
+        onFrame: function(){
+            if( this.skipFrames > 0){
+                this.skipFrames--;
+                return;
+            }
+            if( this.lift > 0){
+                this.lift -- ;
+            }
+
+
+            if(in_x(this) && in_y(this) ){
+                //map conversion
+                //console.log( this.y / this.h, this.cy, this.cx );
+
+                if( map[ this.cy ][ this.cx ] == '^' ){
+                    map[ this.cy ][ this.cx ] = '_';
+                    this.lift = (this.h + this.w )/ this.playerSpeed -1 ;
+                    this.y -= 2*this.playerSpeed;
+                    this.move.y = -1
+                    this.move.x = 1
+                    return;
+                }
+
+                if( map[ this.cy ][ this.cx ] == '_' ){
+                    map[ this.cy ][ this.cx ] = '^';
+                    this.skipFrames = this.w / this.playerSpeed;
+                    return ;
+                }
+            }
 
             moveAI2D( this );
-            move( this );
-            //this.x += 10;
-            /*
-            this.moveDirection = ki(this.moveDirection, this.x, this.y, this.h, this.w, playerX, playerY);        
-            this.killPlayerWithCoord();
-            this.applyXandY();
-            */
+            move( this ); //test for colision with enemy
         },
-        reDigging: function( data ){
-            var block = data[0].obj;
-            block.enemyUnDig();
+        enemyCollision: function(data){
+            console.log('EC', this);
         },
         killPlayer: function(data) {
+            var player = data[0].obj;
 
-            Crafty.trigger('EnemyCollison', this);
+            if( Math.abs(this.x - player.x) + Math.abs(this.y - player.y ) < this.w - 3 ){
+                Crafty.trigger('EnemyCollison', this);
+            }
             //playerCharacter = data[0].obj;
             //playerCharacter.collect();
-        },
-        killPlayerWithCoord: function ()
-        { 
-            if(playerX >= this.x && playerY == this.y && playerX <= (this.x + this.w))
-            {	
-				Crafty.trigger('EnemyCollison', this);
-            }
         },
         mapPos: function (){
             return {

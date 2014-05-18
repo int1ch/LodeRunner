@@ -55,6 +55,17 @@ Crafty.c('Stone', {   //ohne spritemapping
                 this.sprite(1,0);
                 map[this.cy][this.cx] = 'W';
                 //kill every one one in touch collision
+                this.addComponent('Collision');
+                var data = this.hit('PC');
+                for( var i in data ){
+                    var e = data[i].obj 
+                    var d = Math.abs( this.x - e.x ) + Math.abs( this.y - e.y );
+                    if( d < this.h - 1 ){
+                        e.kill();
+                    }
+                }
+                console.log(data);
+                this.removeComponent('Collision');
             }
             if( this.holeSt == 1 && this.holeSize >= this.h ){
                 this.holeSt = 2; //hole digged
@@ -106,7 +117,12 @@ var playerY = 0;
 var playerW = 0;
 var playerH = 0;
 
- 
+Crafty.c('PC', {
+    init: function() {
+        this.requires('Collision');
+    }
+} );
+
 Crafty.c('Enemy', 
     {
         //x - xpixel (absolute)
@@ -114,19 +130,23 @@ Crafty.c('Enemy',
         //w - width
         //h - height
         init: function() {
-            this.requires('Actor, Collision, Gravity, spr_enemy, SpriteAnimation')
+            this.requires('Actor, PC, Gravity, spr_enemy, SpriteAnimation')
                     //.stopOnSolids()
                     .bind('EnterFrame', this.onFrame)
-                    .animate("walk_right", 5, 0, 9)
-                    .animate("walk_up", 0, 1, 2)
-                    .animate("walk_down", 2, 1, 0)
-                    .animate("climb_right", 0, 2, 3) 
-                    .animate("climb_left", 4, 2, 7) 
+
+                    .reel("walk_left",  500, 0, 0, 5)
+                    .reel("walk_right", 500, 6, 0, 5)
+                    .reel("walk_up",    500, 0, 1, 2)
+                    .reel("walk_down",  500, 0, 1, 2)
+                    .reel("climb_right",500, 0, 2, 4) 
+                    .reel("climb_left", 500, 4, 2, 4) 
+                    .reel("stand",      500, 4, 2, 4) 
+                    .attr( { move: {x:0, y:0} , z:99 })
+                    //.animate('climb_left', 5, -1)
                     //.onHit('PlayerCharacter', this.killPlayer)
                     //.onHit('Enemy', this.enemyCollision )
                     ;  
                     //.onHit('Treasure', this.collectTreasure);
-            this.move = {x:0,y:0};
         },
         //Frage: kann irgendwie playerX und Y nicht lesen (sind aber global und beim spieler funktionierts(siehe console)
         //Wenn man eine move Direction vorher festlegt hängt er sich bei detect Block auf!
@@ -171,6 +191,9 @@ Crafty.c('Enemy',
             moveAI2D( this );
             move( this ); //test for colision with enemy
         },
+        kill: function(){
+            this.destroy();
+        },
         enemyCollision: function(data){
             console.log('EC', this);
         },
@@ -204,18 +227,23 @@ var pX = null, pY = null;
 Crafty.c('PlayerCharacter', {
     init: function() {
         // Multiway: Character goes in the direction of the degree number. Right Arrow = 0 (Clockwise). Number in the Beginnig is the speed.           
-        this.requires('Actor, Multiway, Collision, Gravity, spr_player, SpriteAnimation, Keyboard')
+        this.requires('Actor, Multiway, PC, Gravity, spr_player, SpriteAnimation, Keyboard')
             .bind('KeyDown'     , this.keyTester)
             .bind('KeyUp'       , this.keyTester)
             .bind('EnterFrame'  , this.toDoList)     //enter frame called on each time tic;
-            .animate("walk_left", 0, 0, 4)
-            .animate("walk_right", 5, 0, 9)
-            .animate("walk_up", 0, 1, 2)
-            .animate("walk_down", 2, 1, 0)
-            .animate("climb_right", 0, 2, 3) 
-            .animate("climb_left", 4, 2, 7) 
+            .reel('stand', 0, 0, 3 )
+            .reel("walk_left",  200,   0, 0, 4)
+            .reel("walk_right", 300,   5, 0, 4)
+            .reel("walk_up",    200,    0, 1, 3)
+            .reel("walk_down",  200 ,   0, 1, 3)
+            .reel("climb_right", 0, 2, 3) 
+            .reel("climb_left", 4, 2, 7) 
+          //  .animate('stand', 5)
+           // .animate("fall", 5) 
             .onHit('Treasure'   , this.collectTreasure)
-            .onHit('Exit'       , this.hitExit);
+            .onHit('Exit'       , this.hitExit)
+            .attr({z: 100 } )
+            ;
 				
 		var animation_speed = 5;
         this.bind('NewDirection', function(data) {
@@ -316,6 +344,11 @@ Crafty.c('PlayerCharacter', {
         //console.log( block );
         if( block && block.dig ){ block.dig() }
     },
+    kill: function(){
+        this.destroy();
+        Crafty.trigger('EnemyCollison', this);
+        //Crafty.trigger('PlayerKilled', this);
+    },
 
         
         applyXandY: function(){
@@ -351,7 +384,10 @@ Crafty.c('PlayerCharacter', {
             }
         }
 
-});
+}) 
+ //   .reel("walk_left", 0, 0, 4)
+ //   .reel("walk_right", 5, 0, 9)
+;
 
 var treasureCollected = 0;
 

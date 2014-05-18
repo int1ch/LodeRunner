@@ -178,9 +178,29 @@ function move( c  ){
     if( m.y ){
         to_move = can_move_y(c);
     }
+    var reel;
     if( to_move ){
         c.x += to_move[0] * s;
         c.y += to_move[1] * s;
+        if( to_move[0] ){
+            reel = to_move[0] < 0 ? 'walk_left': 'walk_right';
+        }
+        else if(to_move[1]) {
+            reel = to_move[1] < 0 ? 'walk_up': 'walk_down';
+        }
+    }
+    if( reel ){
+        var cReel = c.getReel();
+        if (!cReel || cReel.id !=  reel ){
+            c.animate(reel, -1);
+        } else {
+            c.resumeAnimation();
+        }
+    } else {
+        if( c.isPlaying() ) { 
+            c.resetAnimation();
+            c.pauseAnimation();
+        }
     }
     c.cx = c.x / c.w - 1;
     c.cy = c.y / c.h - 1;

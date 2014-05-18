@@ -216,6 +216,7 @@ function can_move_y(c) {
 }
 //used for falling down
 function can_stand( c ){
+    if(c.cy >= Game.map_grid.height - 3){return 1}
     var cells = get_baseline_cells( c )
     //console.log( c.x, c.y , cells );
 

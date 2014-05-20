@@ -38,9 +38,8 @@ Crafty.c('Stone', {   //ohne spritemapping
     init: function() {
         this.requires('Actor, Solid, spr_stone')                
                 .bind('EnterFrame', this.onFrame )
-                //.onHit('Enemy', this.unDig )
-                .sprite(1,0);
-        
+                .attr({z:200})
+
     },
     holeSize: 0, //hole timer
     holeSt  : 0, //0 no hole, 1 digging, 2 digged
@@ -52,7 +51,7 @@ Crafty.c('Stone', {   //ohne spritemapping
             if( this.holeSize <= 0 ){
                 this.holeSize = 0;
                 this.holeSt   = 0;
-                this.sprite(1,0);
+                this.sprite(3,1);
                 map[this.cy][this.cx] = 'W';
                 //kill every one one in touch collision
                 this.addComponent('Collision');
@@ -66,10 +65,16 @@ Crafty.c('Stone', {   //ohne spritemapping
                 }
                 console.log(data);
                 this.removeComponent('Collision');
+            }  else if(this.holeSize == this.w / 4 ){
+                this.sprite(2,1);
+            }  else if(this.holeSize == this.w / 2 ){
+                this.sprite(1,1);
+            }  else if(this.holeSize == this.w / 4 * 3 ){
+                this.sprite(0,1);
             }
             if( this.holeSt == 1 && this.holeSize >= this.h ){
                 this.holeSt = 2; //hole digged
-                this.sprite(0,1);
+                this.sprite(5,1);
                 this.holeSize += this.w * 4 * this.speed ; //speed defined by 
                 map[this.cy][this.cx] = '_';
             }
@@ -99,15 +104,11 @@ Crafty.c('Stone', {   //ohne spritemapping
 Crafty.c('Ladder', {
     init: function() {
         this.requires('Actor, spr_ladder')                
-               // .image('assets/Leiter_oK_24x24_72ppi.png');
-				.sprite(0,1);
-               
     },
 });
 Crafty.c('Pole', {
     init: function() {
         this.requires('Actor, spr_pole')
-                .sprite(1,1);
     },
 });
  
@@ -143,7 +144,7 @@ Crafty.c('Enemy',
                     .reel("stand",      500, 4, 2, 4) 
                     .attr( { move: {x:0, y:0} , z:99 })
                     //.animate('climb_left', 5, -1)
-                    //.onHit('PlayerCharacter', this.killPlayer)
+                    .onHit('PlayerCharacter', this.killPlayer)
                     //.onHit('Enemy', this.enemyCollision )
                     ;  
                     //.onHit('Treasure', this.collectTreasure);
@@ -394,7 +395,6 @@ var treasureCollected = 0;
 Crafty.c('Treasure', {
     init: function() {
         this.requires('Actor, spr_treasure')
-            .sprite(0,0);
     },
 	
     collect: function() {

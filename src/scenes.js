@@ -130,21 +130,22 @@ Crafty.scene('Game', function() {
 	container = Crafty.e('TreasureContainer');
  
     if(levelcounter == 0){
-		map = level1;
+		map = Crafty.clone( level1 );
     }
     //console.log(levelcounter);
 	
     if(levelcounter == 1){
-		map = level2;
+		map = Crafty.clone( level2 );
     }
     
-    if(levelcounter == 3){
-		map = level3;
+    if(levelcounter >= 3){
+		map =Crafty.clone( level3 );
     }
     
 	container.initialize();
 	
     for (var y = 0; y < Game.map_grid.height; y++) {
+        map[y] = map[y].split("");
         map_comp[y] = new Array();
         for (var x = 0; x < Game.map_grid.width; x++) {
 
@@ -183,12 +184,12 @@ Crafty.scene('Game', function() {
                     for (var x = 0; x < Game.map_grid.width; x++) {
                         if (map[y][x] == 'h'){
                             Crafty.e('Ladder').at(x+1, y+1);
+                            map[y][x] = "H";
                         }
                         if (map[y][x] == 'X'){
                             Crafty.e('Exit').at(x+1, y+1);
                         }
                     }
-                    map[y] = map[y].replace('h', 'H');
                 }
             }
         });
@@ -242,35 +243,44 @@ this.unbind('KeyDown', this.restart_game);
 
 
 Crafty.scene('Loading', function(){
+    Crafty.load(
+        [
+            'assets/brick.png',
+            'assets/playersprite.png', 
+            'assets/enemysprite.png', 
+            'assets/background3.png' 
+        ], 
+        function(){
+            Crafty.sprite(24, 'assets/playersprite.png', {
+                spr_player: [0, 0],
+            });
+            Crafty.sprite(24, 'assets/enemysprite.png', {
+                spr_enemy: [0, 0],
+            });
+            Crafty.sprite(24, 'assets/brick.png', {
+                spr_ladder:     [3,0], 
+                spr_treasure:   [4, 0], 
+                spr_pole:       [5,0],
+                spr_stone:      [3, 1], 
+                spr_concret:    [4, 1],
+                spr_hole:       [5, 1],
+            });
+            var bg = Crafty.e("2D, DOM, Image")
+                .attr({w: Crafty.viewport.width, h: Crafty.viewport.height})
 
-        Crafty.load(['assets/Stein_oK_72ppi.png', 'assets/ladder.png', 'assets/Schatz_24x19_72ppi.png', 'assets/pole.png', 'assets/playersprite.png', 'assets/enemysprite.png', 'assets/background3.png' ], function(){
-
-	    Crafty.sprite(24, 'assets/playersprite.png', {
-        spr_player: [0, 0],
-        });
-		Crafty.sprite(24, 'assets/enemysprite.png', {
-        spr_enemy: [0, 0],
-        });
-            Crafty.sprite(24, 'assets/assets-yellow.png', {
-        spr_treasure: [0, 0], spr_stone:[1,0], spr_ladder:[0,1], spr_pole:[1,1]
-        });
-        
-        
-            
-        var bg = Crafty.e("2D, DOM, Image")
-                    .attr({w: Crafty.viewport.width, h: Crafty.viewport.height})
-                    .image("assets/background3.png", "no-repeat");
-
-      Crafty.e('2D, DOM, Text')
-    .text("Press Key To Start!")
-    .attr({ x: 0, y: Game.height()/2 - 24, w: Game.width() })
-    .css({ "text-align": "center"})
-    .textFont({ size: '15px', weight: 'bold' })
-    .textColor("#FFFFFF");    
-    })
+            Crafty.e('2D, DOM, Text')
+                .text("Press Key To Start!")
+                .attr({ x: 0, y: Game.height()/2 - 24, w: Game.width() })
+                .css({ "text-align": "center"})
+                .textFont({ size: '15px', weight: 'bold' })
+                .textColor("#FFFFFF");    
+        }
+    );
     
     this.start_game = function() {Crafty.scene('Game');}; //verbessurung
     this.bind('KeyDown', this.start_game);
-}, function() {
-this.unbind('KeyDown', this.start_game);
-});
+}, 
+function() {
+        this.unbind('KeyDown', this.start_game);
+}
+);

@@ -1,10 +1,13 @@
 
 
 TODO
- player and hunter collision
-     ai mass test
- work with hidden ledders ( map update )(exit to next level)
- diggin holes 
+    Decrease FPS?
+    Enemy Animation speed-up
+    Enemy collision ( fall lift move-left, right)
+    Enemy Reborn 
+    Treasure Collection, dropping by enemy
+
+
 
  
 
